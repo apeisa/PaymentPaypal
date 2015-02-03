@@ -1,0 +1,141 @@
+<?php
+
+/**
+ * 
+ * PayPal payment method for ProcessWire
+ * 2015 - Antti Peisa
+ * 
+ * Uses PayPal standard payment API and PDT for payment verification. 
+ * 
+ * Big thanks to Torleif Berger for this article:
+ * http://www.geekality.net/2010/10/19/php-tutorial-paypal-payment-data-transfers-pdt/
+ * 
+ */
+
+require_once($this->config->paths->siteModules . '/PaymentModule/PaymentModule.php');
+
+class PaymentPaypal extends PaymentModule implements PaymentModuleEmbed {
+
+	public static function getModuleInfo() {
+		return array(
+			'title' => 'PaymentPayal', 
+			'version' => 001, 
+			'summary' => 'PaymentPaypal - using standard payment API and PDT for verification',
+			'singular' => false,
+			'autoload' => false, 
+			);
+	}
+		
+	public function init() {
+		$this->currenct = $this->defaultCurrency;
+	}
+
+  public function getTitle() {
+    return $this->_("PayPal");
+  }
+
+	public function processPayment() {
+
+    $tx = $this->input->get->tx;
+    $postParams = array(
+      'cmd' => '_notify-synch',
+      'tx' => $tx, 
+      'at' => $this->identityToken 
+    ); 
+
+    $http = new WireHttp();
+    $response = $http->post($this->endpoint . 'cgi-bin/webscr', $postParams); 
+
+    // Response should start with SUCCESS, otherwise something fishy going on (or more likely PayPal changing something...)
+    if( ! strpos($response, 'SUCCESS') === 0) {
+      return false;
+    }
+    
+    // Clean the messy response into an array
+    $data = substr($response, 7);
+    $data = urldecode($data);
+    preg_match_all('/^([^=\s]++)=(.*+)/m', $data, $m, PREG_PATTERN_ORDER);
+    $data = array_combine($m[1], $m[2]);
+
+    // Finally confirm that the total amount is what we except!
+    $amount = $data['mc_gross'] * 100;
+    if ($amount == $this->amount) {
+      return true;
+    } else {
+      return false;
+    }
+	}
+
+	public function embed() {
+
+		if ($this->amount <= 0) throw new WireException("amount is not set");
+		if ($this->processUrl == '') throw new WireException("processUrl is not set");
+
+    $formTemplate = new TemplateFile(__DIR__ . DIRECTORY_SEPARATOR . "payment_form.php");
+    $formTemplate->set("endpoint", $this->endpoint);
+    $formTemplate->set("customer", $this->customer);
+    $formTemplate->set("products", $this->products);
+    $formTemplate->set("business", $this->business);
+    $formTemplate->set("currency", $this->currency);
+    $formTemplate->set("location", $this->location);
+    $formTemplate->set("returnUrl", $this->processUrl);
+    $formTemplate->set("returntxt", $this->returntxt);
+    $formTemplate->set("cancelUrl", $this->cancelUrl);
+
+		return $formTemplate->render();
+	}
+
+	public static function getModuleConfigInputfields(array $data) {
+		$inputfields = new InputfieldWrapper();
+
+    $field = wire('modules')->get('InputfieldText');
+    $field->name = 'currency';
+    $field->label = __("Default currency");
+    $field->notes = __("Use this currency by default (always possible to overwrite when using this module from API)");
+    if(isset($data['currency'])) $field->value = $data['currency'];
+    $inputfields->add($field);
+
+    $field = wire('modules')->get('InputfieldText');
+    $field->name = 'returntxt';
+    $field->label = __("Return to store text at PayPal");
+    $field->notes = __("Text that is shown on back to store buttons at PayPal.");
+    if(isset($data['returntxt'])) $field->value = $data['returntxt'];
+    $inputfields->add($field);
+
+    $field = wire('modules')->get('InputfieldText');
+    $field->name = 'location';
+    $field->label = __("Location");
+    $field->notes = __("Location code, ie. GB");
+    if(isset($data['location'])) $field->value = $data['location'];
+    $inputfields->add($field);
+
+    $field = wire('modules')->get('InputfieldText');
+    $field->name = 'endpoint';
+    $field->label = __("API Endpoint");
+    $field->notes = __("Either https://www.paypal.com/ or https://www.sandbox.paypal.com/ depending if testing or not");
+    if(isset($data['endpoint'])) $field->value = $data['endpoint'];
+    $inputfields->add($field);
+
+    
+    $field = wire('modules')->get('InputfieldText');
+    $field->name = 'identityToken';
+    $field->label = __("Identity Token");
+    $field->notes = __("Payment Data Transfer Identity Token (can be found from paypal.com => LOGIN => Profile => My Selling Tools => Website preferences");
+    if(isset($data['identityToken'])) $field->value = $data['identityToken'];
+    $inputfields->add($field);
+
+    $field = wire('modules')->get('InputfieldEmail');
+    $field->name = 'business';
+    $field->label = __("PayPal email");
+    if(isset($data['business'])) $field->value = $data['business'];
+    $inputfields->add($field);
+
+    $field = wire('modules')->get("InputfieldMarkup");
+    $field->label = __("Additional information");
+    $field->value = "Make sure you have Auto Return and Payment Data Transfer set to ON from <a href='https://www.paypal.com/cgi-bin/customerprofileweb?cmd=_profile-website-payments'>PayPal website preferences</a>";
+    $inputfields->add($field);
+
+
+		return $inputfields;
+	}
+}
