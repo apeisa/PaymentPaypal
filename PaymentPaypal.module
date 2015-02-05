@@ -14,7 +14,7 @@
 
 
 
-class PaymentPaypal extends PaymentModule implements PaymentModuleEmbed {
+class PaymentPaypal extends PaymentModule {
 
 	public static function getModuleInfo() {
 		return array(
@@ -67,7 +67,7 @@ class PaymentPaypal extends PaymentModule implements PaymentModuleEmbed {
     return false;
 	}
 
-	public function embed() {
+	public function render() {
 
 		if ($this->getTotalAmount() <= 0) throw new WireException("Products are not set");
 		if ($this->processUrl == '') throw new WireException("processUrl is not set");
