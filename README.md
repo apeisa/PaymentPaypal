@@ -8,6 +8,7 @@ PayPal payment method for ProcessWire
 // Load the module and setup payment
 $payment = $modules->get("PaymentPaypal");
 $payment->setCurrency("EUR");
+$payment->setId(123456789);
 
 $customer = Array();
 $customer['givenName'] = "Antti";
