@@ -12,7 +12,7 @@
  * 
  */
 
-require_once($this->config->paths->siteModules . '/PaymentModule/PaymentModule.php');
+
 
 class PaymentPaypal extends PaymentModule implements PaymentModuleEmbed {
 
@@ -23,6 +23,7 @@ class PaymentPaypal extends PaymentModule implements PaymentModuleEmbed {
 			'summary' => 'PaymentPaypal - using standard payment API and PDT for verification',
 			'singular' => false,
 			'autoload' => false, 
+            'requires' => 'PaymentModule'
 			);
 	}
 		
@@ -34,7 +35,7 @@ class PaymentPaypal extends PaymentModule implements PaymentModuleEmbed {
     return $this->_("PayPal");
   }
 
-	public function processPayment() {
+  public function processPayment() {
 
     $tx = $this->input->get->tx;
     $postParams = array(
@@ -57,30 +58,31 @@ class PaymentPaypal extends PaymentModule implements PaymentModuleEmbed {
     preg_match_all('/^([^=\s]++)=(.*+)/m', $data, $m, PREG_PATTERN_ORDER);
     $data = array_combine($m[1], $m[2]);
 
-    // Finally confirm that the total amount is what we except!
+    // Verify payment to have same id and amount that we except
     $amount = $data['mc_gross'] * 100;
-    if ($amount == $this->amount) {
+    if ($this->getTotalAmount()  ==  $amount && $this->id == $data['invoice']) {
       return true;
-    } else {
-      return false;
-    }
+    } 
+
+    return false;
 	}
 
 	public function embed() {
 
-		if ($this->amount <= 0) throw new WireException("amount is not set");
+		if ($this->getTotalAmount() <= 0) throw new WireException("Products are not set");
 		if ($this->processUrl == '') throw new WireException("processUrl is not set");
 
-    $formTemplate = new TemplateFile(__DIR__ . DIRECTORY_SEPARATOR . "payment_form.php");
-    $formTemplate->set("endpoint", $this->endpoint);
-    $formTemplate->set("customer", $this->customer);
-    $formTemplate->set("products", $this->products);
-    $formTemplate->set("business", $this->business);
-    $formTemplate->set("currency", $this->currency);
-    $formTemplate->set("location", $this->location);
-    $formTemplate->set("returnUrl", $this->processUrl);
-    $formTemplate->set("returntxt", $this->returntxt);
-    $formTemplate->set("cancelUrl", $this->cancelUrl);
+        $formTemplate = new TemplateFile(__DIR__ . DIRECTORY_SEPARATOR . "payment_form.php");
+        $formTemplate->set("invoice", $this->id);
+        $formTemplate->set("endpoint", $this->endpoint);
+        $formTemplate->set("customer", $this->customer);
+        $formTemplate->set("products", $this->products);
+        $formTemplate->set("business", $this->business);
+        $formTemplate->set("currency", $this->currency);
+        $formTemplate->set("location", $this->location);
+        $formTemplate->set("returnUrl", $this->processUrl);
+        $formTemplate->set("returntxt", $this->returntxt);
+        $formTemplate->set("cancelUrl", $this->cancelUrl);
 
 		return $formTemplate->render();
 	}

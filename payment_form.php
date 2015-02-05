@@ -22,7 +22,7 @@
   <input name = "return" value = "<?= $returnUrl ?>" type = "hidden">
   <input name = "cbt" value = "<?= $returntxt ?>" type = "hidden">
   <input name = "cancel_return" value = "<?= $cancelUrl ?>" type = "hidden">
-  <input name = "custom" value = "" type = "hidden">
+  <input name = "invoice" value = "<?= $invoice ?>" type = "hidden">
   <input name="landing_page" value="Billing" type="hidden">
 
   <?php
