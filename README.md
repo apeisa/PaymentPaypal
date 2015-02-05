@@ -9,22 +9,19 @@ PayPal payment method for ProcessWire
 $payment = $modules->get("PaymentPaypal");
 $payment->setCurrency("EUR");
 
-$customer = new WireData();
-$customer->givenName = "Antti";
-$customer->familyName = "Peisa";
-$customer->streetAddress = "Some street";
-$customer->locality = "Some City";
-$customer->postalCode = "12345";
-$customer->email = "antti.peisa@gmail.com";
+$customer = Array();
+$customer['givenName'] = "Antti";
+$customer['familyName'] = "Peisa";
+$customer['streetAddress'] = "Some Street";
+$customer['locality'] = "Some City";
+$customer['postalCode'] = "12345";
+$customer['email'] = "antti.peisa@gmail.com";
+$payment->setCustomerData($customer);
 
-$payment->setCustomer($customer);
-
-$product = new WireData();
-$product->title = "Cool product";
-$product->quantity = 2;
-$product->amount = 1000; // Amount in payment modules always in cents
-$payment->addProduct($product);
-
+$title = "Cool product";
+$quantity = 2;
+$amount = 1000; // Amount in payment modules always in cents
+$payment->addProduct($title, $amount, $quantity);
 
 // In this example we are going to do all in same page
 $url = $page->httpUrl;
