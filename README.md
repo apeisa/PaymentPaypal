@@ -1,6 +1,9 @@
 # PaymentPaypal
 PayPal payment method for ProcessWire
 
+## Requirements
+Requires PaymentModule -module
+
 ## Example
 
 ```PHP
