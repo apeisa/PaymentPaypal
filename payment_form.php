@@ -30,6 +30,7 @@
   foreach($products as $p) {
     $i = $i + 1;
     $amount = $p->amount / 100;
+    $amount = str_replace(",", ".", $amount);
     echo '<input name = "item_name_'. $i .'" value = "'. $p->title .'" type = "hidden">';
     echo '<input name = "quantity_'. $i .'" value = "'. $p->quantity .'" type = "hidden">';
     echo '<input name = "amount_'. $i .'" value = "'. $amount .'" type = "hidden">';
