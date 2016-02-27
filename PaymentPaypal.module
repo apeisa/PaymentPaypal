@@ -72,12 +72,12 @@ class PaymentPaypal extends PaymentModule {
     } 
 
     return false;
-	}
+  }
 
-	public function render() {
+  public function render() {
 
-		if ($this->getTotalAmount() <= 0) throw new WireException("Products are not set");
-		if ($this->processUrl == '') throw new WireException("processUrl is not set");
+    if ($this->getTotalAmount() <= 0) throw new WireException("Products are not set");
+    if ($this->processUrl == '') throw new WireException("processUrl is not set");
 
     $formTemplate = new TemplateFile(__DIR__ . DIRECTORY_SEPARATOR . "payment_form.php");
     $formTemplate->set("invoice", $this->id);
@@ -91,7 +91,7 @@ class PaymentPaypal extends PaymentModule {
     $formTemplate->set("returntxt", $this->returntxt);
     $formTemplate->set("cancelUrl", $this->cancelUrl);
 
-		return $formTemplate->render();
+    return $formTemplate->render();
   }
 
   public static function getModuleConfigInputfields(array $data) {
@@ -144,7 +144,6 @@ class PaymentPaypal extends PaymentModule {
     $field->value = "Make sure you have Auto Return and Payment Data Transfer set to ON from <a href='https://www.paypal.com/cgi-bin/customerprofileweb?cmd=_profile-website-payments'>PayPal website preferences</a>";
     $inputfields->add($field);
 
-
-		return $inputfields;
+    return $inputfields;
   }
 }
