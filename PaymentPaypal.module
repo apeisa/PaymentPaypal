@@ -16,23 +16,27 @@
 
 class PaymentPaypal extends PaymentModule {
 
-	public static function getModuleInfo() {
-		return array(
-			'title' => 'PaymentPayal', 
-			'version' => 001, 
-			'summary' => 'PaymentPaypal - using standard payment API and PDT for verification',
-			'singular' => false,
-			'autoload' => false, 
-            'requires' => 'PaymentModule'
-			);
-	}
-		
-	public function init() {
-		$this->currenct = $this->defaultCurrency;
-	}
+  public static function getModuleInfo() {
+    return array(
+      'title' => 'PaymentPayal', 
+      'version' => 001, 
+      'summary' => 'PaymentPaypal - using standard payment API and PDT for verification',
+      'singular' => false,
+      'autoload' => false, 
+      'requires' => 'PaymentModule'
+    );
+  }
+
+  public function init() {
+    $this->currenct = $this->defaultCurrency;
+  }
 
   public function getTitle() {
     return $this->_("PayPal");
+  }
+
+  public function getFailureReason() {
+    return $this->session->paypalError;
   }
 
   public function processPayment() {
@@ -49,6 +53,9 @@ class PaymentPaypal extends PaymentModule {
 
     // Response should start with SUCCESS, otherwise something fishy going on (or more likely PayPal changing something...)
     if( ! strpos($response, 'SUCCESS') === 0) {
+      // TODO: We could do much better error handling here
+      if (strpos($response, "4020")) $this->session->paypalError = "PayPal error 4020. Most probably wrong or missing Identity Token";
+      else $this->session->paypalError = $response;
       return false;
     }
     
@@ -72,23 +79,23 @@ class PaymentPaypal extends PaymentModule {
 		if ($this->getTotalAmount() <= 0) throw new WireException("Products are not set");
 		if ($this->processUrl == '') throw new WireException("processUrl is not set");
 
-        $formTemplate = new TemplateFile(__DIR__ . DIRECTORY_SEPARATOR . "payment_form.php");
-        $formTemplate->set("invoice", $this->id);
-        $formTemplate->set("endpoint", $this->endpoint);
-        $formTemplate->set("customer", $this->customer);
-        $formTemplate->set("products", $this->products);
-        $formTemplate->set("business", $this->business);
-        $formTemplate->set("currency", $this->currency);
-        $formTemplate->set("location", $this->location);
-        $formTemplate->set("returnUrl", $this->processUrl);
-        $formTemplate->set("returntxt", $this->returntxt);
-        $formTemplate->set("cancelUrl", $this->cancelUrl);
+    $formTemplate = new TemplateFile(__DIR__ . DIRECTORY_SEPARATOR . "payment_form.php");
+    $formTemplate->set("invoice", $this->id);
+    $formTemplate->set("endpoint", $this->endpoint);
+    $formTemplate->set("customer", $this->customer);
+    $formTemplate->set("products", $this->products);
+    $formTemplate->set("business", $this->business);
+    $formTemplate->set("currency", $this->currency);
+    $formTemplate->set("location", $this->location);
+    $formTemplate->set("returnUrl", $this->processUrl);
+    $formTemplate->set("returntxt", $this->returntxt);
+    $formTemplate->set("cancelUrl", $this->cancelUrl);
 
 		return $formTemplate->render();
-	}
+  }
 
-	public static function getModuleConfigInputfields(array $data) {
-		$inputfields = new InputfieldWrapper();
+  public static function getModuleConfigInputfields(array $data) {
+    $inputfields = new InputfieldWrapper();
 
     $field = wire('modules')->get('InputfieldText');
     $field->name = 'currency';
@@ -139,5 +146,5 @@ class PaymentPaypal extends PaymentModule {
 
 
 		return $inputfields;
-	}
+  }
 }
