@@ -11,6 +11,7 @@
   <input type="hidden" name="first_name" value="<?= $customer->givenName ?>">
   <input type="hidden" name="last_name" value="<?= $customer->familyName ?>">
   <input type="hidden" name="address1" value="<?=  $customer->streetAddress ?>">
+  <input type="hidden" name="address2" value="<?=  $customer->streetAddress2 ?>">
   <input type="hidden" name="city" value="<?= $customer->locality ?>">
   <input type="hidden" name="zip" value="<?= $customer->postalCode ?>">
   <input type="hidden" name="email" value="<?= $customer->email ?>">
