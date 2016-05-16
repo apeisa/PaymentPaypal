@@ -3,7 +3,7 @@
 /**
  * 
  * PayPal payment method for ProcessWire
- * 2015 - Antti Peisa
+ * 2015-2016 - Antti Peisa
  * 
  * Uses PayPal standard payment API and PDT for payment verification. 
  * 
@@ -48,8 +48,26 @@ class PaymentPaypal extends PaymentModule {
       'at' => $this->identityToken 
     ); 
 
-    $http = new WireHttp();
-    $response = $http->post($this->endpoint . 'cgi-bin/webscr', $postParams); 
+    $endpoint = $this->endpoint . 'cgi-bin/webscr';
+
+    if ($this->curl) {
+      $ch = curl_init();
+      curl_setopt($ch,CURLOPT_URL, $endpoint);
+      curl_setopt($ch,CURLOPT_POST, count($postParams));
+      curl_setopt($ch,CURLOPT_POSTFIELDS, http_build_query($postParams));
+      curl_setopt($ch,CURLOPT_RETURNTRANSFER, TRUE);
+      curl_setopt($ch,CURLOPT_HEADER, FALSE);
+      curl_setopt($ch,CURLOPT_SSLVERSION, 6);
+      $response = curl_exec($ch); 
+    } else {
+      $http = new WireHttp();
+      $response = $http->post($endpoint, $postParams); 
+    }
+
+    if (! $response) {
+      throw new WireException("Couldn't get access into ");
+      
+    }
 
     // Response should start with SUCCESS, otherwise something fishy going on (or more likely PayPal changing something...)
     if( ! strpos($response, 'SUCCESS') === 0) {
@@ -70,7 +88,7 @@ class PaymentPaypal extends PaymentModule {
     if ($this->getTotalAmount()  ==  $amount && $this->id == $data['invoice']) {
       return true;
     } 
-
+    
     return false;
   }
 
@@ -142,6 +160,14 @@ class PaymentPaypal extends PaymentModule {
     $field = wire('modules')->get("InputfieldMarkup");
     $field->label = __("Additional information");
     $field->value = "Make sure you have Auto Return and Payment Data Transfer set to ON from <a href='https://www.paypal.com/cgi-bin/customerprofileweb?cmd=_profile-website-payments'>PayPal website preferences</a>";
+    $inputfields->add($field);
+
+    $field = wire('modules')->get("InputfieldCheckbox");
+    $field->name = 'curl';
+    $field->label = __("Use cURL for payment validation");
+    $field->description = __("If your successfull payment's doesn't validate, you might want to try this cURL based verification instead of the standard (WireHttp)");
+    $field->value = 1;
+    $field->attr('checked', empty($data['curl']) ? '' : 'checked');
     $inputfields->add($field);
 
     return $inputfields;
