@@ -42,6 +42,11 @@ class PaymentPaypal extends PaymentModule {
   public function processPayment() {
 
     $tx = $this->input->get->tx;
+    if (empty($tx)) {
+      $this->session->paypalError = __("Paypal configuration error - merchant is not using PDT so we cannot validate the payment.");
+      return false;
+    }
+    
     $postParams = array(
       'cmd' => '_notify-synch',
       'tx' => $tx, 
