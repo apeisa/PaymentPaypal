@@ -147,7 +147,7 @@ class PaymentPaypal extends PaymentModule {
     $field = wire('modules')->get('InputfieldText');
     $field->name = 'identityToken';
     $field->label = __("Identity Token");
-    $field->notes = __("Payment Data Transfer Identity Token (can be found from paypal.com => LOGIN => Profile => My Selling Tools => Website preferences");
+    $field->notes = __("Payment Data Transfer Identity Token (can be found from paypal.com => LOGIN => Profile => My selling preferences => Website preferences");
     if(isset($data['identityToken'])) $field->value = $data['identityToken'];
     $inputfields->add($field);
 
