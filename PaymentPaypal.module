@@ -18,7 +18,7 @@ class PaymentPaypal extends PaymentModule {
 
   public static function getModuleInfo() {
     return array(
-      'title' => 'PaymentPayal', 
+      'title' => 'PaymentPaypal', 
       'version' => 001, 
       'summary' => 'PaymentPaypal - using standard payment API and PDT for verification',
       'singular' => false,
