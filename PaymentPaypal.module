@@ -28,7 +28,7 @@ class PaymentPaypal extends PaymentModule {
   }
 
   public function init() {
-    $this->currenct = $this->defaultCurrency;
+    $this->currency = $this->defaultCurrency;
   }
 
   public function getTitle() {
